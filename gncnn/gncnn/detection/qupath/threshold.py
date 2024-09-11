@@ -66,7 +66,7 @@ def contours2geojson(contours, pixel_size, output_path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Segment Glomeruli with Detectron2 from WSI')
+    parser = argparse.ArgumentParser(description='Segment Tissue from WSI')
     parser.add_argument('--undersampling', type=int, help='Undersampling factor of tiles', default=20)
     parser.add_argument('-w', '--wsi', type=str, help='path/to/wsi', required=True)
     parser.add_argument('-e', '--export', type=str, help='path/to/export', required=True)
