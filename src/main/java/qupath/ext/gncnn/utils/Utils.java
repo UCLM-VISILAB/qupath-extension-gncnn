@@ -191,10 +191,12 @@ public class Utils {
             }
         }
         
-        // Get the top k most predicted classes, i.e., the classes with the highest probabilities, removing the 'Non-sclerotic' class if necessary
+        // Get the top k most predicted classes, i.e., the classes with the highest probabilities,
+        // removing the 'Non-sclerotic' and 'Sclerotic' classes if necessary
         List<Map.Entry<String, Double>> sortedProbs = new ArrayList<>(diseaseProbs.entrySet());
         if (removeNonSclerotic) {
             sortedProbs.removeIf(entry -> entry.getKey().equals("Non-sclerotic"));
+            sortedProbs.removeIf(entry -> entry.getKey().equals("Sclerotic"));
         }
         sortedProbs.sort((entry1, entry2) -> entry2.getValue().compareTo(entry1.getValue()));
         List<String> topkClasses = new ArrayList<>();
