@@ -4,7 +4,9 @@
 package qupath.ext.gncnn.tasks;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -13,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import qupath.ext.gncnn.entities.ProgressListener;
+import qupath.ext.gncnn.env.VirtualEnvironment;
 import qupath.ext.gncnn.utils.Utils;
 import qupath.lib.common.GeneralTools;
 import qupath.lib.gui.QuPathGUI;
@@ -20,6 +23,7 @@ import qupath.lib.images.ImageData;
 import qupath.lib.images.writers.TileExporter;
 import qupath.lib.projects.Project;
 import qupath.lib.projects.ProjectImageEntry;
+import qupath.lib.scripting.QP;
 
 /**
  * Class to tile the WSI into the given size patches and save them in a
@@ -70,7 +74,13 @@ public class TilerTask extends Task<Void> {
                 } else {
                     logger.error("No image or project is open");
                 }
-            }
+
+            // Tissue detections are not needed anymore
+            File thresholdOutputFolder = new File(
+                    QP.buildFilePath(outputBaseDir, TaskPaths.TMP_FOLDER, TaskPaths.THRESHOLD_OUTPUT_FOLDER));
+            if (thresholdOutputFolder.exists())
+                Utils.deleteFolder(thresholdOutputFolder);
+                }
         } catch (IOException e) {
             logger.error("Error with I/O of files: {}", e.getMessage(), e);
         } catch (InterruptedException e) {
@@ -119,6 +129,24 @@ public class TilerTask extends Task<Void> {
         if (Thread.interrupted()) {
             throw new InterruptedException();
         }
+
+        // Remove non-tissue tiles
+        VirtualEnvironment venv = new VirtualEnvironment(this.getClass().getSimpleName(), progressListener);
+
+        // This is the list of commands after the 'python' call
+        List<String> arguments = Arrays.asList(TaskPaths.THRESHOLD_TILE_COMMAND, "--wsi", imageName, "--export",
+                QP.buildFilePath(outputBaseDir));
+        venv.setArguments(arguments);
+
+        // Check if the thread has been interrupted before starting the process
+        if (Thread.interrupted()) {
+            throw new InterruptedException();
+        }
+
+        // Run the command
+        logger.info("Removing non-tissue exported tiles for {}", imageName);
+        venv.runCommand();
+        logger.info("Finished removing non-tissue exported tiles for {}", imageName);
 
         // Update progress
         progressListener.updateProgress();

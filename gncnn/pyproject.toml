@@ -146,6 +146,7 @@ linux-cpu = [
 # which executes the function `main` from this package when invoked.
 [project.scripts]
 gncnn-threshold = "gncnn.detection.qupath.threshold:main"
+gncnn-threshold-tile = "gncnn.detection.qupath.threshold_tile:main"
 gncnn-segment = "gncnn.detection.qupath.segment:main"
 gncnn-classify = "gncnn.classification.inference.classify:main"
 

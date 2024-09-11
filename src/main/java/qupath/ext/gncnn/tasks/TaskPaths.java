@@ -14,6 +14,7 @@ public class TaskPaths {
     public static final String TMP_FOLDER = "Temp";
 
     public static final String THRESHOLD_COMMAND = "gncnn-threshold";
+    public static final String THRESHOLD_TILE_COMMAND = "gncnn-threshold-tile";
     public static final String SEGMENT_COMMAND = "gncnn-segment";
     public static final String CLASSIFICATION_COMMAND = "gncnn-classify";
 

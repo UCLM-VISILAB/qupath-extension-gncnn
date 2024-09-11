@@ -79,13 +79,6 @@ public class TissueDetectionTask extends Task<Void> {
                     QP.buildFilePath(outputBaseDir, TaskPaths.TMP_FOLDER, TaskPaths.LOWRES_OUTPUT_FOLDER));
             if (lowresOutputFolder.exists())
                 Utils.deleteFolder(lowresOutputFolder);
-
-            // Tissue detections are already added to the image hierarchy, so they
-            // are not needed
-            File thresholdOutputFolder = new File(
-                    QP.buildFilePath(outputBaseDir, TaskPaths.TMP_FOLDER, TaskPaths.THRESHOLD_OUTPUT_FOLDER));
-            if (thresholdOutputFolder.exists())
-                Utils.deleteFolder(thresholdOutputFolder);
         } catch (IOException e) {
             logger.error("Error with I/O of files: {}", e.getMessage(), e);
         } catch (InterruptedException e) {
