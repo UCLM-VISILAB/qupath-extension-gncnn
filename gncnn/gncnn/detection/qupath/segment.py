@@ -185,9 +185,13 @@ def main():
                 offset_wsi.append((x1_off, y1_off))
                 counts = counts + 1
 
-    print(f"Before NMS: {len(bboxes_wsi)}")
-    idxs = nms(bboxes_wsi, scores_wsi, threshold_iou=0.4, threshold_iom=0.4, return_idxs=True)
-    print(f"After  NMS: {len(idxs)}")
+    if len(bboxes_wsi) != 0:
+        print(f"Before NMS: {len(bboxes_wsi)}")
+        idxs = nms(bboxes_wsi, scores_wsi, threshold_iou=0.4, threshold_iom=0.4, return_idxs=True)
+        print(f"After  NMS: {len(idxs)}")
+    else:
+        print("No detections found!")
+        idxs = []
 
     picked_boxes = [bboxes_wsi[i] for i in idxs]
     picked_score = [scores_wsi[i] for i in idxs]
