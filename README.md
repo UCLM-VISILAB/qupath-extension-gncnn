@@ -6,6 +6,22 @@ into QuPath. The pipeline is designed to classify glomeruli into sclerotic and
 non-sclerotic classes, and to further classify non-sclerotic glomeruli into
 12 common common glomerulonephritis diagnoses.
 
+If you find this tool useful for your research, please cite our article in __Computational and Structural Biotechnology Journal__:
+
+```
+@article{MATEOSAPARICIORUIZ202535,
+title = {GNCnn: A QuPath extension for glomerulosclerosis and glomerulonephritis characterization based on deep learning},
+journal = {Computational and Structural Biotechnology Journal},
+volume = {27},
+pages = {35-47},
+year = {2025},
+issn = {2001-0370},
+doi = {https://doi.org/10.1016/j.csbj.2024.11.049},
+url = {https://www.sciencedirect.com/science/article/pii/S2001037024004197},
+author = {Israel Mateos-Aparicio-Ruiz and Anibal Pedraza and Jan Ulrich Becker and Nicola Altini and Jesus Salido and Gloria Bueno}
+}
+```
+
 The pipeline is based on the [MESCnn](https://github.com/Nicolik/MESCnn) 
 pipeline, which was developed for the Oxford classification of glomeruli in
 IgA nephropathy. The paper for MESCnn can be found at 
