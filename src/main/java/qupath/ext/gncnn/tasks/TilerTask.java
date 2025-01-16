@@ -107,6 +107,7 @@ public class TilerTask extends Task<Void> {
                 .overlap(tileOverlap)
                 .requestedPixelSize(desiredPixelSize)
                 .annotatedTilesOnly(true)
+                .includePartialTiles(true)
                 .writeTiles(outputPath);
         logger.info("Tiling of {} finished: {}", imageName, outputPath);
 
