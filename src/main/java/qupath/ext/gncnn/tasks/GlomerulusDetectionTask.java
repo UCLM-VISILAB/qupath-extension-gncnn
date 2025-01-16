@@ -44,17 +44,17 @@ public class GlomerulusDetectionTask extends Task<Void> {
 
     private String trainConfig;
 
-    private int undersampling;
+    private double desiredPixelSize;
 
     private ProgressListener progressListener;
 
     public GlomerulusDetectionTask(QuPathGUI quPath, ObservableList<String> selectedImages, String modelName,
-            String trainConfig, int undersampling, ProgressListener progressListener) {
+            String trainConfig, double desiredPixelSize, ProgressListener progressListener) {
         this.qupath = quPath;
         this.selectedImages = selectedImages;
         this.modelName = modelName;
         this.trainConfig = trainConfig;
-        this.undersampling = undersampling;
+        this.desiredPixelSize = desiredPixelSize;
         this.progressListener = progressListener;
     }
 
@@ -109,12 +109,13 @@ public class GlomerulusDetectionTask extends Task<Void> {
         VirtualEnvironment venv = new VirtualEnvironment(this.getClass().getSimpleName(), progressListener);
 
         double pixelSize = imageData.getServer().getPixelCalibration().getAveragedPixelSizeMicrons();
+        double undersampling = desiredPixelSize / imageData.getServer().getPixelCalibration().getAveragedPixelSize().doubleValue();
 
         // This is the list of commands after the 'python' call
         List<String> arguments = Arrays.asList(TaskPaths.SEGMENT_COMMAND, "--wsi", imageName, "--export",
                 QP.buildFilePath(outputBaseDir),
                 "--model",
-                modelName, "--train-config", trainConfig, "--undersampling", Integer.toString(undersampling),
+                modelName, "--train-config", trainConfig, "--undersampling", Double.toString(undersampling),
                 "--pixel-size", Double.toString(pixelSize));
         venv.setArguments(arguments);
 
