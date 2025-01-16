@@ -295,7 +295,7 @@ public class TaskManager {
      * @throws IOException // In case there is an issue reading the image
      */
     private void tileWSIs(ObservableList<String> selectedImages, ProgressListener progressListener) throws IOException {
-        submitTask(new TilerTask(qupath, selectedImages, 4096, 2048, 1, ".jpeg", progressListener));
+        submitTask(new TilerTask(qupath, selectedImages, 4096, 2048, 0.25, ".jpeg", progressListener));
     }
 
     /**
@@ -307,7 +307,7 @@ public class TaskManager {
      */
     private void detectGlomeruli(ObservableList<String> selectedImages, ProgressListener progressListener)
             throws IOException {
-        submitTask(new GlomerulusDetectionTask(qupath, selectedImages, "cascade_R_50_FPN_1x", "external", 1,
+        submitTask(new GlomerulusDetectionTask(qupath, selectedImages, "cascade_R_50_FPN_1x", "external", 0.25,
                 progressListener));
     }
 

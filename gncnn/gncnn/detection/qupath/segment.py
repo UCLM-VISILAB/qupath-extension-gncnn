@@ -56,7 +56,7 @@ def main():
     parser.add_argument('-e', '--export', type=str, help='path/to/export', required=True)
     parser.add_argument('-m', '--model', type=str, help='Model to use for inference', default="cascade_R_50_FPN_1x")
     parser.add_argument('-c', '--train-config', type=str, help='I=Internal/E=External/A=All', default="external")
-    parser.add_argument('--undersampling', type=int, help='Undersampling factor of tiles', default=4)
+    parser.add_argument('--undersampling', type=float, help='Undersampling factor of tiles', default=4)
     parser.add_argument('--pixel-size', type=float, help='Pixel size of the WSI', default=0.5)
 
     args = parser.parse_args()
@@ -137,7 +137,7 @@ def main():
 
         im = cv2.imread(filename)
         start_time = time.time()
-        if not 'linux' in platform:
+        if 'linux' not in platform:
             lib = "TorchScript"
             # Disable gradient computation during inference
             with torch.no_grad():
@@ -147,7 +147,6 @@ def main():
             
             # keys=['pred_boxes', 'pred_classes', 'pred_masks', 'scores']
             boxes = outputs[0]
-            classes = outputs[1].cpu().numpy()
             scores = outputs[3].cpu().numpy()
             masks = outputs[2][:, 0, :, :]
             
@@ -209,7 +208,7 @@ def main():
         single_glomerulus_mask = single_glomerulus_mask.astype(np.uint8)
 
         polygon = mask2polygon(single_glomerulus_mask)
-        area_um = get_area_10x(polygon) * args.pixel_size**2
+        area_um = get_area_10x(polygon) * (args.pixel_size * undersampling) ** 2
         glomerular_areas.append(area_um)
 
         polygon_large = np.array([[point[0]*undersampling + xy_offset[0],
