@@ -27,7 +27,7 @@ public class GNCnnExtension implements QuPathExtension, GitHubProject {
 	private static final Logger logger = LoggerFactory.getLogger(GNCnnExtension.class);
 
 	private static final String EXTENSION_NAME = "GNCnn";
-	private static final String EXTENSION_DESCRIPTION = "An extension which detects and classifies glomeruli in QuPath using deep learning.";
+	private static final String EXTENSION_DESCRIPTION = "A QuPath extension for glomerulosclerosis and glomerulonephritis characterization based on deep learning.";
 	private static final Version EXTENSION_QUPATH_VERSION = Version.parse("v0.5.0");
 	private static final GitHubRepo EXTENSION_REPOSITORY = GitHubRepo.create(
 			EXTENSION_NAME, "israelMateos", "qupath-extension-gncnn");

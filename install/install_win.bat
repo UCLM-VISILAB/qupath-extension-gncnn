@@ -33,13 +33,29 @@ if "%nvidia_cuda_111%"=="false" (
         )
     )
 )
+
+:: If CUDA 11.1 is not detected, check for cudatoolkit 11.1 in conda
+set "nvidia_cuda_111_conda=false"
+if "%nvidia_cuda_111_conda%"=="false" (
+    for /f "delims=" %%P in ('conda list cudatoolkit --json 2^>nul') do (
+        echo %%P | findstr "11.1" >nul
+        if not errorlevel 1 (
+            set "nvidia_cuda_111_conda=true"
+            goto cuda_detected
+        )
+    )
+)
+
 :cuda_detected
-echo CUDA 11.1 detected: %nvidia_cuda_111%
+echo System-wide CUDA 11.1 detected: %nvidia_cuda_111%
+echo Conda CUDA 11.1 detected: %nvidia_cuda_111_conda%
 
 :: Set suffix and mmcv-version based on GPU and CUDA detection
 if %nvidia_gpu%==true (
     if %nvidia_cuda_111%==true (
         set "suffix=cu111system"
+    ) else if %nvidia_cuda_111_conda%==true (
+        set "suffix=cu111conda"
     ) else (
         set "suffix=cu111"
     )
@@ -87,10 +103,27 @@ if %suffix%==cpu (
 if %suffix%==cu111system (
     pip install torch==1.8.0 torchvision==0.9.0 --no-cache-dir
 )
+if %suffix%==cu111conda (
+    pip install torch==1.8.0 torchvision==0.9.0 --no-cache-dir
+)
 :: Install pre-built mmcv-full if CUDA 11.1 is not installed system-wide
 :: Otherwise, install the PyPI-indexed version
 if %suffix%==cu111 (
     pip install "mmcv-full==1.7.2" --no-cache-dir -f https://download.openmmlab.com/mmcv/dist/%suffix%/torch1.8.0/index.html
+
+    if %errorlevel% neq 0 (
+        echo.
+        echo *******************************************************
+        echo ERROR: Failed to install mmcv-full.
+        echo This could be due to SSL/corporate security issues.
+        echo Please check your firewall/proxy settings.
+        echo *******************************************************
+        echo.
+        goto eof
+    )
+)
+if %suffix%==cu111conda (
+    pip install "mmcv-full==1.7.2" --no-cache-dir -f https://download.openmmlab.com/mmcv/dist/cu111/torch1.8.0/index.html
 
     if %errorlevel% neq 0 (
         echo.
@@ -119,6 +152,10 @@ if %suffix%==cpu (
 )
 if %suffix%==cu111system (
     pip install "mmcv-full==1.7.2" --no-cache-dir
+)
+
+if %suffix%==cu111conda (
+    set "suffix=cu111system"
 )
 
 pip install ..\gncnn\[%suffix%] --no-cache-dir

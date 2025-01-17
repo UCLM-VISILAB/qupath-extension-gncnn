@@ -22,8 +22,16 @@ if [ $? -eq 0 ]; then
     echo "System-wide CUDA 11.1 installation detected."
     suffix='cu111system'
 else
-    echo "System-wide CUDA 11.1 installation not detected."
+    # Check for cudatoolkit 11.1 in conda
+    conda list cudatoolkit | grep "11.1"
+    if [ $? -eq 0 ]; then
+        echo "Conda CUDA 11.1 installation detected."
+        suffix='cu111conda'
+    else
+        echo "System-wide CUDA 11.1 installation not detected."
+    fi
 fi
+
 
 # Install the required Python packages
 echo "Installing the required Python packages..."
@@ -32,7 +40,7 @@ pip install "numpy>=1.24.4,<2" "cached-property>=1.5.2" --no-cache-dir
 # If not installed previously, gncnn cannot be installed (detectron2 dependency)
 # Install pre-built torch and torchvision if CUDA 11.1 is not installed system-wide
 # Otherwise, install the PyPI-indexed version
-if [ $suffix != 'cu111system' ]; then
+if [ "$suffix" != 'cu111system' ] && [ "$suffix" != 'cu111conda' ]; then
     pip install torch==1.8.0+${suffix} \
         torchvision==0.9.0+${suffix} \
         --no-cache-dir \
@@ -53,6 +61,10 @@ fi
 # Install pre-built mmcv-full if CUDA 11.1 is not installed system-wide
 # Otherwise, install the PyPI-indexed version
 if [ $suffix != 'cu111system' ]; then
+    if [ $suffix == 'cu111conda' ]; then
+        aux_suffix='cu111conda'
+        suffix='cu111'
+    fi
     pip install "mmcv-full==1.7.2" --no-cache-dir -f https://download.openmmlab.com/mmcv/dist/${suffix}/torch1.8.0/index.html
 
     if [ $? -ne 0 ]; then
@@ -64,8 +76,16 @@ Please check your firewall/proxy settings.
 *******************************************************
 EOF
     fi
+
+    if [ $aux_suffix ]; then
+        suffix=$aux_suffix
+    fi
 else
     pip install "mmcv-full==1.7.2" --no-cache-dir
+fi
+
+if [ $suffix == 'cu111conda' ]; then
+    suffix='cu111system'
 fi
 
 # Install the gncnn package
@@ -77,7 +97,7 @@ echo "Downloading the models..."
 python3 ./download_models.py
 
 # Check if the models were downloaded
-if [ ! -f "..\models\models\detection\model_final.pth" ]; then
+if [ ! -f "../models/models/detection/model_final.pth" ]; then
     cat <<EOF
 *******************************************************
 ERROR: The models were not downloaded.
