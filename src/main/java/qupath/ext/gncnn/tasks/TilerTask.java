@@ -39,19 +39,19 @@ public class TilerTask extends Task<Void> {
 
     private int tileOverlap;
 
-    private double downsample;
+    private double desiredPixelSize;
 
     private String imageExtension;
 
     private ProgressListener progressListener;
 
     public TilerTask(QuPathGUI quPath, ObservableList<String> selectedImages, int tileSize, int tileOverlap,
-            double downsample, String imageExtension, ProgressListener progressListener) {
+            double desiredPixelSize, String imageExtension, ProgressListener progressListener) {
         this.qupath = quPath;
         this.selectedImages = selectedImages;
         this.tileSize = tileSize;
         this.tileOverlap = tileOverlap;
-        this.downsample = downsample;
+        this.desiredPixelSize = desiredPixelSize;
         this.imageExtension = imageExtension;
         this.progressListener = progressListener;
     }
@@ -105,8 +105,9 @@ public class TilerTask extends Task<Void> {
                 .tileSize(tileSize)
                 .imageExtension(imageExtension)
                 .overlap(tileOverlap)
-                .downsample(downsample)
+                .requestedPixelSize(desiredPixelSize)
                 .annotatedTilesOnly(true)
+                .includePartialTiles(true)
                 .writeTiles(outputPath);
         logger.info("Tiling of {} finished: {}", imageName, outputPath);
 

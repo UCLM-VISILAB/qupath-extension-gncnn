@@ -56,7 +56,7 @@ def main():
     parser.add_argument('-e', '--export', type=str, help='path/to/export', required=True)
     parser.add_argument('-m', '--model', type=str, help='Model to use for inference', default="cascade_R_50_FPN_1x")
     parser.add_argument('-c', '--train-config', type=str, help='I=Internal/E=External/A=All', default="external")
-    parser.add_argument('--undersampling', type=int, help='Undersampling factor of tiles', default=4)
+    parser.add_argument('--undersampling', type=float, help='Undersampling factor of tiles', default=4)
     parser.add_argument('--pixel-size', type=float, help='Pixel size of the WSI', default=0.5)
 
     args = parser.parse_args()
@@ -137,7 +137,7 @@ def main():
 
         im = cv2.imread(filename)
         start_time = time.time()
-        if not 'linux' in platform:
+        if 'linux' not in platform:
             lib = "TorchScript"
             # Disable gradient computation during inference
             with torch.no_grad():
@@ -147,13 +147,14 @@ def main():
             
             # keys=['pred_boxes', 'pred_classes', 'pred_masks', 'scores']
             boxes = outputs[0]
-            classes = outputs[1].cpu().numpy()
             scores = outputs[3].cpu().numpy()
             masks = outputs[2][:, 0, :, :]
             
             if outputs[2].shape[0] > 0:
-                scale_factor = inputs["width"] / image.shape[2] # Images are square
-                boxes *= scale_factor
+                scale_factor_w = inputs["width"] / image.shape[2]
+                scale_factor_h = inputs["height"] / image.shape[1]
+                boxes[:, [0, 2]] *= scale_factor_w
+                boxes[:, [1, 3]] *= scale_factor_h
                 masks = paste_masks_in_image(masks, boxes, im.shape[:2])
             mask_array = masks.cpu().numpy()
         else:
@@ -185,9 +186,13 @@ def main():
                 offset_wsi.append((x1_off, y1_off))
                 counts = counts + 1
 
-    print(f"Before NMS: {len(bboxes_wsi)}")
-    idxs = nms(bboxes_wsi, scores_wsi, threshold_iou=0.4, threshold_iom=0.4, return_idxs=True)
-    print(f"After  NMS: {len(idxs)}")
+    if len(bboxes_wsi) != 0:
+        print(f"Before NMS: {len(bboxes_wsi)}")
+        idxs = nms(bboxes_wsi, scores_wsi, threshold_iou=0.4, threshold_iom=0.4, return_idxs=True)
+        print(f"After  NMS: {len(idxs)}")
+    else:
+        print("No detections found!")
+        idxs = []
 
     picked_boxes = [bboxes_wsi[i] for i in idxs]
     picked_score = [scores_wsi[i] for i in idxs]
@@ -205,7 +210,7 @@ def main():
         single_glomerulus_mask = single_glomerulus_mask.astype(np.uint8)
 
         polygon = mask2polygon(single_glomerulus_mask)
-        area_um = get_area_10x(polygon) * args.pixel_size**2
+        area_um = get_area_10x(polygon) * (args.pixel_size * undersampling) ** 2
         glomerular_areas.append(area_um)
 
         polygon_large = np.array([[point[0]*undersampling + xy_offset[0],
