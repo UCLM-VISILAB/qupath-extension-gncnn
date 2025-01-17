@@ -112,6 +112,12 @@ cu111 = [
     "mmcv-full==1.7.2"
 ]
 
+cu111system = [
+    "torch==1.8.0",
+    "torchvision==0.9.0",
+    "mmcv-full==1.7.2"
+]
+
 cpu = [
     "torch==1.8.0+cpu",
     "torchvision==0.9.0+cpu",
@@ -130,6 +136,11 @@ linux = [
 
 linux-cu111 = [
     "gncnn[cu111]",
+    "gncnn[linux]"
+]
+
+linux-cu111system = [
+    "gncnn[cu111system]",
     "gncnn[linux]"
 ]
 

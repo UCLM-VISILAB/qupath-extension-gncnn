@@ -9,6 +9,11 @@ GNCnn was tested on Ubuntu 20.04 and 22.04, Windows 10 and macOS Big Sur 11.4. I
 
 **0.** Install Python 3.8 or 3.9 (not higher) on your system.
 
+> [!IMPORTANT]
+> When installing Python, make sure to check the option to add Python to the system PATH as in the following image:
+>
+> ![Python installation](../images/python_path.png)
+
 <!-- **0.** Install on your system the following dependencies:
 
 - Python 3.8 or 3.9 (not higher)
@@ -30,3 +35,12 @@ In the configuration file, you should set the following variables:
 - `extension_path`: the path to the `.jar` file downloaded in step 1. It should include the file name.
   
 **3.** From the `install` directory, run the following command:
+
+## Troubleshooting
+
+### Installation fails with SSL error
+
+If the installation fails with an SSL error, it may be due to firewall corporate restrictions, not allowing the download of the model weights. To fix this, you can:
+- Use a different network.
+- Contact your network administrator to allow the installation.
+- Contact the main developer, [Israel Mateos-Aparicio](mailto:israel.MateosAparici@uclm.es?subject=[GNCnn]%20Installation%20issue), to get the model weights and manually copy them to the `gncnn` directory in the QuPath extensions directory.
