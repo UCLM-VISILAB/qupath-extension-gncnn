@@ -280,23 +280,26 @@ public class Utils {
                             className = className.replace("Glomerulus", "Non-classified");
                             className = className.replace("NoSclerotic", "Non-sclerotic");
                             className = className.split(" ")[0];
-                            diseaseCounts.put(className, diseaseCounts.get(className) + 1);
-                            nGlomeruli++;
 
-                            // Get the probabilities of the detected classes
-                            Map<String, Number> measurements = annotation.getMeasurements();
-                            Double noScleroticProb = measurements.getOrDefault("NoSclerotic-prob", 0.0).doubleValue();
+                            if (diseaseCounts.containsKey(className)) {
+                                diseaseCounts.put(className, diseaseCounts.get(className) + 1);
+                                nGlomeruli++;
 
-                            // All the probabilities except the "NoSclerotic" and "Sclerotic"
-                            // must be multiplied by the "NoSclerotic" probability, as they
-                            // are sub-classes of "NoSclerotic"
-                            for (Map.Entry<String, Number> entry : measurements.entrySet()) {
-                                String key = entry.getKey();
-                                Double value = entry.getValue().doubleValue();
-                                if (!key.equals("NoSclerotic-prob") && !key.equals("Sclerotic-prob")) {
-                                    diseaseProbs.put(key.replace("-prob", ""), diseaseProbs.get(key.replace("-prob", "")) + value * noScleroticProb);
-                                } else {
-                                    diseaseProbs.put(key.replace("-prob", "").replace("NoSclerotic", "Non-sclerotic"), diseaseProbs.get(key.replace("-prob", "").replace("NoSclerotic", "Non-sclerotic")) + value);
+                                // Get the probabilities of the detected classes
+                                Map<String, Number> measurements = annotation.getMeasurements();
+                                Double noScleroticProb = measurements.getOrDefault("NoSclerotic-prob", 0.0).doubleValue();
+
+                                // All the probabilities except the "NoSclerotic" and "Sclerotic"
+                                // must be multiplied by the "NoSclerotic" probability, as they
+                                // are sub-classes of "NoSclerotic"
+                                for (Map.Entry<String, Number> entry : measurements.entrySet()) {
+                                    String key = entry.getKey();
+                                    Double value = entry.getValue().doubleValue();
+                                    if (!key.equals("NoSclerotic-prob") && !key.equals("Sclerotic-prob")) {
+                                        diseaseProbs.put(key.replace("-prob", ""), diseaseProbs.get(key.replace("-prob", "")) + value * noScleroticProb);
+                                    } else {
+                                        diseaseProbs.put(key.replace("-prob", "").replace("NoSclerotic", "Non-sclerotic"), diseaseProbs.get(key.replace("-prob", "").replace("NoSclerotic", "Non-sclerotic")) + value);
+                                    }
                                 }
                             }
                         }
