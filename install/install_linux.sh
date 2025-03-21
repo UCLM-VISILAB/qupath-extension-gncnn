@@ -5,15 +5,33 @@ source ./linux.cfg
 echo "QuPath installation path: ${qupath_path}"
 echo "Extension path: ${extension_path}"
 
-# Detect NVIDIA GPU and system-wide CUDA 11.1 installation
+# Detect NVIDIA GPU and CUDA 11.8 installation
 echo "Detecting NVIDIA GPU..."
 nvidia-smi > /dev/null
-if [ $? -eq 0 ]; then
-    echo "NVIDIA GPU detected."
-    suffix='cu118'
-else
+if [ $? -ne 0 ]; then
     echo "NVIDIA GPU not detected."
     suffix='cpu'
+else
+    echo "NVIDIA GPU detected."
+fi
+
+echo "Detecting CUDA 11.8 installation..."
+if [ "$suffix" != "cpu" ]; then
+    nvcc --version | grep "release 11.8"
+    if [ $? -eq 0 ]; then
+        echo "System-wide CUDA 11.8 installation detected."
+        suffix='cu118'
+    else
+        # Check for cudatoolkit 11.8 in conda
+        conda list cudatoolkit | grep "11.8"
+        if [ $? -eq 0 ]; then
+            echo "Conda CUDA 11.8 installation detected."
+            suffix='cu118'
+        else
+            echo "CUDA 11.8 installation not detected."
+            suffix='cpu'
+        fi
+    fi
 fi
 
 # Install the required Python packages
@@ -21,7 +39,7 @@ echo "Installing the required Python packages..."
 # Install numpy and cached-property first to avoid errors in Python 3.9
 pip install "numpy>=1.24.4,<2" "cached-property>=1.5.2" --no-cache-dir
 # If not installed previously, gncnn cannot be installed (detectron2 dependency)
-pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/${suffix}
+pip install torch==2.4.1 torchvision==0.19.1 --index-url https://download.pytorch.org/whl/${suffix}
 
 # Install mmcv+mmpretrain via openmim
 pip install -U openmim && mim install mmcv "mmpretrain>=1.0.0rc8"
@@ -86,13 +104,13 @@ mkdir -p ${classification_model_dir}
 cp -r ../models/models/classification/* ${classification_model_dir}
 echo "Classification models copied."
 
-# # Remove models directory
-# rm -rf ../models
+# Remove models directory
+rm -rf ../models
 
-# # Install the QuPath extension
-# echo "Installing QuPath extension"
-# qupath="${qupath_path}/bin/QuPath"
-# $qupath script ./install.groovy --args $extension_path --save
-# echo "QuPath extension installed."
+# Install the QuPath extension
+echo "Installing QuPath extension"
+qupath="${qupath_path}/bin/QuPath"
+$qupath script ./install.groovy --args $extension_path --save
+echo "QuPath extension installed."
 
-# echo "Installation completed."
+echo "Installation completed."

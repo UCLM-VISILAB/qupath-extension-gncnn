@@ -39,6 +39,28 @@ In the configuration file, you should set the following variables:
   
 **3.** From the `install` directory, run the following command:
 
+- **Linux**:
+
+```bash
+bash install.sh
+```
+
+- **Windows**:
+
+```bash
+.\install.bat
+```
+
+- **macOS**:
+
+```bash
+sh install.sh
+```
+
+This script will install the Python tool on which the extension depends, and will download the model weights. It will also create a new directory for the GNCnn extension in the QuPath extensions directory. The next time you open QuPath, the extension will be available in the menu.
+
+**4.** Once the extension is installed, you can remove this repository's directory (`qupath-extension-gncnn`) from your system.
+
 ## Troubleshooting
 
 ### Installation fails with SSL error

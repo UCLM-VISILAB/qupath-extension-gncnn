@@ -20,8 +20,34 @@ for /f "usebackq tokens=1* delims=" %%a in (`wmic path win32_VideoController get
 :gpu_detected
 echo NVIDIA GPU detected: %nvidia_gpu%
 
-:: Set suffix and mmcv-version based on GPU and CUDA detection
-if %nvidia_gpu%==true (
+
+:: Detect CUDA 11.8 system-wide installation
+echo Detecting CUDA 11.8 installation...
+set "nvidia_cuda_118=false"
+for /f "delims=" %%P in ('nvcc --version 2^>nul') do (
+    echo %%P | findstr "release 11.8" >nul
+    if not errorlevel 1 (
+        set "nvidia_cuda_118=true"
+        goto cuda_detected
+    )
+)
+
+:: If CUDA 11.8 is not detected, check for cudatoolkit 11.8 in conda
+if "%nvidia_cuda_118%"=="false" (
+    for /f "delims=" %%P in ('conda list cudatoolkit --json 2^>nul') do (
+        echo %%P | findstr "11.8" >nul
+        if not errorlevel 1 (
+            set "nvidia_cuda_118=true"
+            goto cuda_detected
+        )
+    )
+)
+
+:cuda_detected
+echo CUDA 11.8 detected: %nvidia_cuda_118%
+
+:: Set suffix based on CUDA 11.8 detection
+if %nvidia_cuda_118%==true (
     set "suffix=cu118"
 ) else (
     set "suffix=cpu"
