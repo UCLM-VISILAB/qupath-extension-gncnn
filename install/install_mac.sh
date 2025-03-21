@@ -7,19 +7,6 @@ echo "Extension path: ${extension_path}"
 
 echo "Installing the required Python packages..."
 
-# Install mmcv+mmpretrain via openmim
-pip install -U openmim --no-cache-dir && mim install "mmcv==2.2.0" "mmpretrain==1.2.0"
-
-if [ $? -ne 0 ]; then
-    cat <<EOF
-*******************************************************
-ERROR: Failed to install mmcv.
-This could be due to SSL/corporate security issues.
-Please check your firewall/proxy settings.
-*******************************************************
-EOF
-    fi
-
 # Uninstall (if) existing (maybe incompatible) packages
 echo "Uninstalling existing packages that might be incompatible..."
 echo "Uninstalling gncnn..."
@@ -61,6 +48,19 @@ if pip show torch > /dev/null 2>&1; then
 else
     echo "torch was not installed previously."
 fi
+
+# Install mmcv+mmpretrain via openmim
+pip install -U openmim --no-cache-dir && mim install "mmcv==2.2.0" "mmpretrain>=1.2.0"
+
+if [ $? -ne 0 ]; then
+    cat <<EOF
+*******************************************************
+ERROR: Failed to install mmcv.
+This could be due to SSL/corporate security issues.
+Please check your firewall/proxy settings.
+*******************************************************
+EOF
+    fi
 
 # Install the gncnn package
 pip install "../gncnn/[mac]" --no-cache-dir
