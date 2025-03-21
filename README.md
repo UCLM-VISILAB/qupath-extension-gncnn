@@ -6,6 +6,22 @@ into QuPath. The pipeline is designed to classify glomeruli into sclerotic and
 non-sclerotic classes, and to further classify non-sclerotic glomeruli into
 12 common common glomerulonephritis diagnoses.
 
+If you find this tool useful for your research, please cite our article in __Computational and Structural Biotechnology Journal__:
+
+```
+@article{MATEOSAPARICIORUIZ202535,
+title = {GNCnn: A QuPath extension for glomerulosclerosis and glomerulonephritis characterization based on deep learning},
+journal = {Computational and Structural Biotechnology Journal},
+volume = {27},
+pages = {35-47},
+year = {2025},
+issn = {2001-0370},
+doi = {https://doi.org/10.1016/j.csbj.2024.11.049},
+url = {https://www.sciencedirect.com/science/article/pii/S2001037024004197},
+author = {Israel Mateos-Aparicio-Ruiz and Anibal Pedraza and Jan Ulrich Becker and Nicola Altini and Jesus Salido and Gloria Bueno}
+}
+```
+
 The pipeline is based on the [MESCnn](https://github.com/Nicolik/MESCnn) 
 pipeline, which was developed for the Oxford classification of glomeruli in
 IgA nephropathy. The paper for MESCnn can be found at 
@@ -27,32 +43,39 @@ author = {Nicola Altini and Michele Rossini and Sándor Turkevi-Nagy and Frances
 
 ## Dependencies
 
-The extension requires the following dependencies:
+The extension requires the following dependencies, depending on the version of the extension:
 
-- Python 3.8 or 3.9 (not higher)
-- If using a NVIDIA GPU:
+- GNCnn 0.1.x:
+  - Python 3.8 or 3.9
   - CUDA 11.1
+
+- GNCnn 0.2.x:
+  - Python 3.9
+  - CUDA 11.8
 
 ## Installation
 
 > [!WARNING]
 > This extension **is developed for QuPath 0.5.0 or higher**, and has not been tested with other versions.
 >
-> If you have a NVIDIA GPU, the extension only supports CUDA 11.1. CPU is also supported.
+> If you have a NVIDIA GPU, the extension only supports CUDA 11.1 for v0.1.x or CUDA 11.8 for v0.2.x. The extension will use the GPU by default if it is available. If you do not have a GPU, the extension will use the CPU.
 
-GNCnn was tested on Ubuntu 20.04 and 22.04, Windows 10 and macOS Big Sur 11.4. It requires Python 3.8 or 3.9 (not higher).
+GNCnn was tested on Ubuntu 20.04 and 22.04, Windows 10 and macOS Big Sur 11.4.
 
-**0.** Install Python 3.8 or 3.9 (not higher) on your system, and CUDA 11.1 if you are using a NVIDIA GPU.
+**0.** Install:
 
+- For GNCnn 0.1.x:
+  - Python 3.8 or 3.9
+  - CUDA 11.1 if you are using a NVIDIA GPU
+
+- For GNCnn 0.2.x:
+  - Python 3.9
+  - CUDA 11.8 if you are using a NVIDIA GPU
+ 
 > [!IMPORTANT]
 > When installing Python, make sure to check the option to add Python to the system PATH as in the following image:
 >
 > ![Python installation](images/python_path.png)
-
-<!-- **0.** Install on your system the following dependencies:
-
-- Python 3.8 or 3.9 (not higher)
-- Git LFS (for downloading the model weights) -->
 
 **1.** Download the latest release from the [Releases](https://github.com/israelMateos/qupath-extension-gncnn/releases/latest) page for the platform you are using.
 

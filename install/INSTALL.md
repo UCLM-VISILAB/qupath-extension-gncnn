@@ -3,21 +3,24 @@
 > [!WARNING]
 > This extension **is developed for QuPath 0.5.0 or higher**, and has not been tested with other versions.
 >
-> If having a NVIDIA GPU, the extension only supports CUDA 11.1. CPU is also supported.
+> If you have a NVIDIA GPU, the extension only supports CUDA 11.1 for v0.1.x or CUDA 11.8 for v0.2.x. The extension will use the GPU by default if it is available. If you do not have a GPU, the extension will use the CPU.
 
-GNCnn was tested on Ubuntu 20.04 and 22.04, Windows 10 and macOS Big Sur 11.4. It requires Python 3.8 or 3.9 (not higher).
+GNCnn was tested on Ubuntu 20.04 and 22.04, Windows 10 and macOS Big Sur 11.4.
 
-**0.** Install Python 3.8 or 3.9 (not higher) on your system.
+**0.** Install:
 
+- For GNCnn 0.1.x:
+  - Python 3.8 or 3.9
+  - CUDA 11.1 if you are using a NVIDIA GPU
+
+- For GNCnn 0.2.x:
+  - Python 3.9
+  - CUDA 11.8 if you are using a NVIDIA GPU
+ 
 > [!IMPORTANT]
 > When installing Python, make sure to check the option to add Python to the system PATH as in the following image:
 >
 > ![Python installation](../images/python_path.png)
-
-<!-- **0.** Install on your system the following dependencies:
-
-- Python 3.8 or 3.9 (not higher)
-- Git LFS (for downloading the model weights) -->
 
 **1.** Download the `.jar` file for the extension from the [Releases](https://github.com/israelMateos/qupath-extension-gncnn/releases/latest) page.
 
