@@ -54,13 +54,32 @@ if %nvidia_cuda_118%==true (
 )
 echo suffix: %suffix%
 
+:: Uninstall (if) existing (maybe incompatible) packages
+echo Uninstalling existing packages that might be incompatible...
+echo Uninstalling gncnn...
+pip uninstall -y gncnn || echo gncnn was not installed.
+
+echo Uninstalling mmcv-full...
+pip uninstall -y mmcv-full || echo mmcv was not installed.
+
+echo Uninstalling mmcv...
+pip uninstall -y mmcv || echo mmcv was not installed.
+
+echo Uninstalling mmcls...
+pip uninstall -y mmcls || echo mmcls was not installed.
+
+echo Uninstalling torchvision...
+pip uninstall -y torchvision || echo torchvision was not installed.
+
+echo Uninstalling torch...
+pip uninstall -y torch || echo torch was not installed.
 
 :: Install the required Python packages
 echo Installing the required Python packages...
 :: Install numpy and cached-property first to avoid errors in Python 3.9
 pip install "numpy>=1.24.4,<2" "cached-property>=1.5.2" --no-cache-dir
 :: If not installed previously, gncnn installation could raise an error
-pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 --index-url https://download.pytorch.org/whl/%suffix%
+pip install torch==2.4.1 torchvision==0.19.1 --no-cache-dir --index-url https://download.pytorch.org/whl/%suffix%
 
 if %errorlevel% neq 0 (
     echo.
@@ -73,7 +92,7 @@ if %errorlevel% neq 0 (
     goto eof
 )
 :: Install mmcv+mmpretrain via openmim
-pip install -U openmim && mim install mmcv "mmpretrain>=1.0.0rc8"
+pip install -U openmim --no-cache-dir && mim install "mmcv==2.2.0" "mmpretrain==1.2.0"
 
 if %errorlevel% neq 0 (
     echo.
@@ -89,6 +108,45 @@ if %errorlevel% neq 0 (
 pip install ..\gncnn\[%suffix%] --no-cache-dir
 echo Python packages installed.
 
+:: Check if models are already in their target paths
+echo Checking if models are already in their target paths...
+for /f "delims=" %%i in ('python -c "import gncnn; print(gncnn.__path__[0])"') do set gncnn_path=%%i
+
+:: Check if gncnn_path is empty
+if "%gncnn_path%"=="" (
+    echo.
+    echo *******************************************************
+    echo ERROR: gncnn is not installed or its path could not be determined.
+    echo Skipping model checking and related operations.
+    goto download_models
+)
+
+set detection_model_dir="%gncnn_path%\detection\logs\cascade_mask_rcnn_R_50_FPN_1x\external-validation\output\"
+set classification_model_dir="%gncnn_path%\classification\logs\"
+
+:: Verify if detection model exists
+if exist "%detection_model_dir%\model_final.pth" (
+    echo Detection model already exists in the target path.
+    set "detection_model_exists=true"
+) else (
+    set "detection_model_exists=false"
+)
+
+:: Verify if classification models exist
+if exist "%classification_model_dir%" (
+    echo Classification models already exist in the target path.
+    set "classification_model_exists=true"
+) else (
+    set "classification_model_exists=false"
+)
+
+:: Skip download and copy if all models exist
+if "%detection_model_exists%"=="true" if "%classification_model_exists%"=="true" (
+    echo All models are already in their target paths. Skipping download and copy process.
+    goto models_checked
+)
+
+:download_models
 :: Download the models
 echo Downloading the models...
 python .\download_models.py
@@ -106,21 +164,8 @@ if not exist ..\models\models\detection\model_final.pth (
 )
 echo Models downloaded.
 
-:: Get model target paths
+:: Copy the models to the target paths
 echo Copying the models to the target paths...
-for /f "delims=" %%i in ('python -c "import gncnn; print(gncnn.__path__[0])"') do set gncnn_path=%%i
-
-:: Check if gncnn_path is empty
-if "%gncnn_path%"=="" (
-    echo.
-    echo *******************************************************
-    echo ERROR: gncnn is not installed or its path could not be determined.
-    echo Skipping model copying and related operations.
-    goto eof
-)
-
-set detection_model_dir="%gncnn_path%\detection\logs\cascade_mask_rcnn_R_50_FPN_1x\external-validation\output\"
-set classification_model_dir="%gncnn_path%\classification\logs\"
 
 :: Copy the detection model to the target path
 if not exist %detection_model_dir% mkdir %detection_model_dir%
@@ -134,6 +179,8 @@ echo Classification models copied.
 
 :: Remove models directory
 rmdir /S /Q ..\models
+
+:models_checked
 
 :: Install the QuPath extension
 echo Installing QuPath extension

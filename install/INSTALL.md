@@ -18,7 +18,7 @@ GNCnn was tested on Ubuntu 20.04 and 22.04, Windows 10 and macOS Big Sur 11.4.
   - CUDA 11.8 if you are using a NVIDIA GPU
  
 > [!IMPORTANT]
-> When installing Python, make sure to check the option to add Python to the system PATH as in the following image:
+> Make sure to have Python in your the system `PATH`. In Windows, make sure to check the option to add Python to the system `PATH` during installation, as in the following image:
 >
 > ![Python installation](../images/python_path.png)
 
