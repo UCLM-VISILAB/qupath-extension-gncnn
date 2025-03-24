@@ -2,11 +2,11 @@
 
 GNCnn (*G*lomerulo*N*ephritis *C*lassification by *n*eural *n*etwork) is an
 extension which integrates a pipeline for glomerular detection and classification
-into QuPath. The pipeline is designed to classify glomeruli into sclerotic and
-non-sclerotic classes, and to further classify non-sclerotic glomeruli into
-12 common common glomerulonephritis diagnoses.
+into QuPath. The pipeline is designed to automatically segment and classify glomeruli
+into sclerotic and non-sclerotic classes, and to further classify non-sclerotic
+glomeruli into 12 common glomerulonephritis diagnoses.
 
-If you find this tool useful for your research, please cite our article in __Computational and Structural Biotechnology Journal__:
+If you find this tool useful for your research, please cite our article in __Computational and Structural Biotechnology Journal__ ([10.1016/j.csbj.2024.11.049](https://doi.org/10.1016/j.csbj.2024.11.049)):
 
 ```
 @article{MATEOSAPARICIORUIZ202535,
@@ -45,35 +45,38 @@ author = {Nicola Altini and Michele Rossini and Sándor Turkevi-Nagy and Frances
 
 The extension requires the following dependencies, depending on the version of the extension:
 
-- GNCnn 0.1.x:
-  - Python 3.8 or 3.9
-  - CUDA 11.1
+> [!IMPORTANT]
+> **GNCnn 0.1.x will probably not work on NVIDIA RTX 40xx GPUs**, as support for Ada Lovelace GPUs was introduced in CUDA 11.8 (see [this link](https://docs.nvidia.com/cuda/archive/11.8.0/cuda-toolkit-release-notes/index.html)). In case you have one of these GPUs, **please install GNCnn 0.2.x**.
 
-- GNCnn 0.2.x:
+- **GNCnn 0.2.x**:
   - Python 3.9
   - CUDA 11.8
+
+- **GNCnn 0.1.x**:
+  - Python 3.8 or 3.9
+  - CUDA 11.1
 
 ## Installation
 
 > [!WARNING]
-> This extension **is developed for QuPath 0.5.0 or higher**, and has not been tested with other versions.
+> This extension **is developed for QuPath 0.5.x**, and has not been tested with other versions.
 >
-> If you have a NVIDIA GPU, the extension only supports CUDA 11.1 for v0.1.x or CUDA 11.8 for v0.2.x. The extension will use the GPU by default if it is available. If you do not have a GPU, the extension will use the CPU.
+> If you have a NVIDIA GPU, the extension only supports CUDA 11.1 for v0.1.x or CUDA 11.8 for v0.2.x. The extension will use the GPU by default if it is available. If you do not have a GPU or the correct CUDA version is not installed, the extension will use the CPU.
 
-GNCnn was tested on Ubuntu 20.04 and 22.04, Windows 10 and macOS Big Sur 11.4.
+GNCnn was tested on Ubuntu 20.04 and 22.04, Windows 10 and 11, and macOS Big Sur 11.4.
 
 **0.** Install:
-
-- For GNCnn 0.1.x:
-  - Python 3.8 or 3.9
-  - CUDA 11.1 if you are using a NVIDIA GPU
 
 - For GNCnn 0.2.x:
   - Python 3.9
   - CUDA 11.8 if you are using a NVIDIA GPU
+
+- For GNCnn 0.1.x:
+  - Python 3.8 or 3.9
+  - CUDA 11.1 if you are using a NVIDIA GPU
  
 > [!IMPORTANT]
-> When installing Python, make sure to check the option to add Python to the system PATH as in the following image:
+> When installing Python on Windows, make sure to check the option to add Python to the system PATH as in the following image:
 >
 > ![Python installation](images/python_path.png)
 
