@@ -49,6 +49,23 @@ else
     echo "torch was not installed previously."
 fi
 
+# Install NumPy and cached-property previously to avoid mmcv installation issues
+pip install "numpy>=1.24.4,<2" "cached-property>=1.5.2" --no-cache-dir
+
+# Install torch and torchvision previously to avoid mmcv installation issues
+pip install torch==2.2.2 torchvision==0.17.2 --no-cache-dir
+
+if [ $? -ne 0 ]; then
+    cat <<EOF
+*******************************************************
+ERROR: Failed to install torch and torchvision.
+This could be due to SSL/corporate security issues.
+Please check your firewall/proxy settings.
+*******************************************************
+EOF
+    exit 1
+fi
+
 # Install mmcv+mmpretrain via openmim
 pip install -U openmim --no-cache-dir && mim install "mmcv==2.2.0" "mmpretrain>=1.2.0"
 
@@ -60,7 +77,8 @@ This could be due to SSL/corporate security issues.
 Please check your firewall/proxy settings.
 *******************************************************
 EOF
-    fi
+    exit 1
+fi
 
 # Install the gncnn package
 pip install "../gncnn/[mac]" --no-cache-dir
