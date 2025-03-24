@@ -135,16 +135,10 @@ def main():
         for image_path in images_list:
             # Forward the sclerotic vs. non-sclerotic model
             scores = bin_model(image_path)[0]["pred_scores"]
-
             class_idxs = np.argsort(scores)[::-1]
-            bin_labels = [
-                bin_model.classes[class_idx]
-                for class_idx in class_idxs
-            ]
+            pred_class = bin_model.classes[class_idxs[0]][3:]
 
             # Collect the predicted class and the scores (scores have shape (num_classes,))
-            pred_label = class_idxs[:1]
-            pred_class = bin_labels[pred_label[0]][3:]
             gdc_dict['NoSclerotic-prob'].append(scores[0])
             gdc_dict['Sclerotic-prob'].append(scores[1])
 
