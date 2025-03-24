@@ -13,12 +13,9 @@ import logging
 import os
 
 import numpy as np
-import torch
 import pandas as pd
 
-from mmcls.apis import init_model
-from mmcls.datasets.pipelines import Compose
-from mmcv.parallel import collate, scatter
+from mmpretrain import ImageClassificationInferencer
 
 from gncnn.classification.gutils.utils import get_proper_device
 from gncnn.classification.inference.paths import get_logs_path
@@ -49,6 +46,11 @@ def main():
     net_name_dict = {
         "B": args.netB,
         "M": args.netM if args.multi else None,
+    }
+
+    config_name_dict = {
+        "convnext": "convnext-base_32xb128_in1k",
+        "swin_transformer": "swin-tiny_16xb64_in1k",
     }
 
     root_path = args.root_path
@@ -106,39 +108,37 @@ def main():
         # Model 1: Sclerotic vs. Non-Sclerotic
         net_name = net_name_dict["B"]
         net_path = os.path.join(gdc_log_dir, 'binary', net_name, f'{net_name}_B_ckpt.pth')
-        config_path = os.path.join(gdc_log_dir, 'binary', net_name, f'{net_name}_B_config.py')
 
         device = get_proper_device()
-        bin_model = init_model(config_path, net_path, device=device)
+        bin_model = ImageClassificationInferencer(
+            model=config_name_dict[net_name],
+            pretrained=net_path,
+            device=device,
+            head=dict(num_classes=2)
+        )
 
         # Model 2: 12 classes
+        mult_model = None
         if args.multi:
             net_name = net_name_dict["M"]
             net_path = os.path.join(gdc_log_dir, '12classes', net_name, f'{net_name}_M_ckpt.pth')
-            config_path = os.path.join(gdc_log_dir, '12classes', net_name, f'{net_name}_M_config.py')
             
-            mult_model = init_model(config_path, net_path, device=device)
+            mult_model = ImageClassificationInferencer(
+                model=config_name_dict[net_name],
+                pretrained=net_path,
+                device=device,
+                head=dict(num_classes=12)
+            )
         
         images_list = os.listdir(prediction_dir)
         images_list = [os.path.join(prediction_dir, f) for f in images_list if f.endswith(".png")]
         for image_path in images_list:
-            # Build the data pipeline
-            data = dict(img_info=dict(filename=image_path), img_prefix=None)
-            pipeline = bin_model.cfg.data.test.pipeline
-            comp_pipeline = Compose(pipeline)
-            data = comp_pipeline(data)
-            data = collate([data], samples_per_gpu=1)
-            if next(bin_model.parameters()).is_cuda:
-                # Scatter to specified GPU
-                data = scatter(data, [device])[0]
-
             # Forward the sclerotic vs. non-sclerotic model
-            with torch.no_grad():
-                scores = bin_model(return_loss=False, **data)
-            # Collect the predicted class and the scores
-            pred_label = np.argsort(scores, axis=1)[0][::-1]
-            pred_class = bin_model.CLASSES[pred_label[0]][3:]
-            scores = scores[0]
+            scores = bin_model(image_path)[0]["pred_scores"]
+            class_idxs = np.argsort(scores)[::-1]
+            pred_class = bin_model.classes[class_idxs[0]][3:]
+
+            # Collect the predicted class and the scores (scores have shape (num_classes,))
             gdc_dict['NoSclerotic-prob'].append(scores[0])
             gdc_dict['Sclerotic-prob'].append(scores[1])
 
@@ -158,14 +158,11 @@ def main():
                 gdc_dict['SLEGN-IV-prob'].append(np.nan)
             else:
                 # Forward the 12 classes model
-                with torch.no_grad():
-                    scores = mult_model(return_loss=False, **data)
-                # Collect the predicted class and the scores
-                pred_label = np.argsort(scores, axis=1)[0][::-1]
-                # pred_class = mult_model.CLASSES[pred_label[0]][3:]
+                scores = mult_model(image_path)[0]["pred_scores"]
+                # Collect the predicted class and the scores (scores have shape (num_classes,))
+                pred_label = np.argsort(scores)[::-1]
                 topk_labels = pred_label[:args.topk]
-                pred_class = [mult_model.CLASSES[l][3:] for l in topk_labels]
-                scores = scores[0]
+                pred_class = [mult_model.classes[l][3:] for l in topk_labels]
                 gdc_dict['ABMGN-prob'].append(scores[0])
                 gdc_dict['ANCA-prob'].append(scores[1])
                 gdc_dict['C3-GN-prob'].append(scores[2])
@@ -206,7 +203,7 @@ def main():
                 if label == 0:
                     classes.append("Sclerotic")
                 else:
-                    classes.append(mult_model.CLASSES[label - 1][3:])
+                    classes.append(mult_model.classes[label - 1][3:])
             most_predicted_class = " | ".join(classes)
             # Get the count of the most predicted class (the first one in the topk)
             top1_most_predicted_class = classes[0]

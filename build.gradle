@@ -15,7 +15,7 @@ ext.moduleName = 'io.github.qupath.extension.gncnn'
 // TODO: Define the extension name & version, and provide a short description
 base {
     archivesName = rootProject.name
-    version = '0.1.1'
+    version = '0.2.0'
     description = 'A QuPath extension for glomerulosclerosis and glomerulonephritis characterization based on deep learning.'
 }
 

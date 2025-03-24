@@ -20,147 +20,133 @@ for /f "usebackq tokens=1* delims=" %%a in (`wmic path win32_VideoController get
 :gpu_detected
 echo NVIDIA GPU detected: %nvidia_gpu%
 
-:: Detect CUDA 11.1 installation
-echo Detecting CUDA 11.1 installation...
-set "nvidia_cuda_111=false"
-if exist "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.1\bin\nvcc.exe" set "nvidia_cuda_111=true"
-if "%nvidia_cuda_111%"=="false" (
-    for /f "delims=" %%P in ('nvcc --version 2^>nul') do (
-        echo %%P | findstr "release 11.1" >nul
-        if not errorlevel 1 (
-            set "nvidia_cuda_111=true"
-            goto cuda_detected
-        )
+
+:: Detect CUDA 11.8 system-wide installation
+echo Detecting CUDA 11.8 installation...
+set "nvidia_cuda_118=false"
+for /f "delims=" %%P in ('nvcc --version 2^>nul') do (
+    echo %%P | findstr "release 11.8" >nul
+    if not errorlevel 1 (
+        set "nvidia_cuda_118=true"
+        goto cuda_detected
     )
 )
 
-:: If CUDA 11.1 is not detected, check for cudatoolkit 11.1 in conda
-set "nvidia_cuda_111_conda=false"
-if "%nvidia_cuda_111_conda%"=="false" (
+:: If CUDA 11.8 is not detected, check for cudatoolkit 11.8 in conda
+if "%nvidia_cuda_118%"=="false" (
     for /f "delims=" %%P in ('conda list cudatoolkit --json 2^>nul') do (
-        echo %%P | findstr "11.1" >nul
+        echo %%P | findstr "11.8" >nul
         if not errorlevel 1 (
-            set "nvidia_cuda_111_conda=true"
+            set "nvidia_cuda_118=true"
             goto cuda_detected
         )
     )
 )
 
 :cuda_detected
-echo System-wide CUDA 11.1 detected: %nvidia_cuda_111%
-echo Conda CUDA 11.1 detected: %nvidia_cuda_111_conda%
+echo CUDA 11.8 detected: %nvidia_cuda_118%
 
-:: Set suffix and mmcv-version based on GPU and CUDA detection
-if %nvidia_gpu%==true (
-    if %nvidia_cuda_111%==true (
-        set "suffix=cu111system"
-    ) else if %nvidia_cuda_111_conda%==true (
-        set "suffix=cu111conda"
-    ) else (
-        set "suffix=cu111"
-    )
+:: Set suffix based on CUDA 11.8 detection
+if %nvidia_cuda_118%==true (
+    set "suffix=cu118"
 ) else (
     set "suffix=cpu"
 )
 echo suffix: %suffix%
 
+:: Uninstall (if) existing (maybe incompatible) packages
+echo Uninstalling existing packages that might be incompatible...
+echo Uninstalling gncnn...
+pip uninstall -y gncnn || echo gncnn was not installed.
+
+echo Uninstalling mmcv-full...
+pip uninstall -y mmcv-full || echo mmcv was not installed.
+
+echo Uninstalling mmcv...
+pip uninstall -y mmcv || echo mmcv was not installed.
+
+echo Uninstalling mmcls...
+pip uninstall -y mmcls || echo mmcls was not installed.
+
+echo Uninstalling torchvision...
+pip uninstall -y torchvision || echo torchvision was not installed.
+
+echo Uninstalling torch...
+pip uninstall -y torch || echo torch was not installed.
 
 :: Install the required Python packages
 echo Installing the required Python packages...
 :: Install numpy and cached-property first to avoid errors in Python 3.9
 pip install "numpy>=1.24.4,<2" "cached-property>=1.5.2" --no-cache-dir
-:: If not installed previously, gncnn cannot be installed (detectron2 dependency)
-:: Install pre-built torch and torchvision if CUDA 11.1 is not installed system-wide
-:: Otherwise, install the PyPI-indexed version
-if %suffix%==cu111 (
-    pip install torch==1.8.0+%suffix% torchvision==0.9.0+%suffix% --no-cache-dir -f https://download.pytorch.org/whl/torch_stable.html
+:: If not installed previously, gncnn installation could raise an error
+pip install torch==2.4.1 torchvision==0.19.1 --no-cache-dir --index-url https://download.pytorch.org/whl/%suffix%
 
-    if %errorlevel% neq 0 (
-        echo.
-        echo *******************************************************
-        echo ERROR: Failed to install PyTorch and torchvision.
-        echo This could be due to SSL/corporate security issues.
-        echo Please check your firewall/proxy settings.
-        echo *******************************************************
-        echo.
-        goto eof
-    )
+if %errorlevel% neq 0 (
+    echo.
+    echo *******************************************************
+    echo ERROR: Failed to install PyTorch and torchvision.
+    echo This could be due to SSL/corporate security issues.
+    echo Please check your firewall/proxy settings.
+    echo *******************************************************
+    echo.
+    goto eof
 )
-if %suffix%==cpu (
-    pip install torch==1.8.0+%suffix% torchvision==0.9.0+%suffix% --no-cache-dir -f https://download.pytorch.org/whl/torch_stable.html
+:: Install mmcv+mmpretrain via openmim
+pip install -U openmim --no-cache-dir && mim install "mmcv==2.2.0" "mmpretrain==1.2.0"
 
-    if %errorlevel% neq 0 (
-        echo.
-        echo *******************************************************
-        echo ERROR: Failed to install PyTorch and torchvision.
-        echo This could be due to SSL/corporate security issues.
-        echo Please check your firewall/proxy settings.
-        echo *******************************************************
-        echo.
-        goto eof
-    )
-)
-if %suffix%==cu111system (
-    pip install torch==1.8.0 torchvision==0.9.0 --no-cache-dir
-)
-if %suffix%==cu111conda (
-    pip install torch==1.8.0 torchvision==0.9.0 --no-cache-dir
-)
-:: Install pre-built mmcv-full if CUDA 11.1 is not installed system-wide
-:: Otherwise, install the PyPI-indexed version
-if %suffix%==cu111 (
-    pip install "mmcv-full==1.7.2" --no-cache-dir -f https://download.openmmlab.com/mmcv/dist/%suffix%/torch1.8.0/index.html
-
-    if %errorlevel% neq 0 (
-        echo.
-        echo *******************************************************
-        echo ERROR: Failed to install mmcv-full.
-        echo This could be due to SSL/corporate security issues.
-        echo Please check your firewall/proxy settings.
-        echo *******************************************************
-        echo.
-        goto eof
-    )
-)
-if %suffix%==cu111conda (
-    pip install "mmcv-full==1.7.2" --no-cache-dir -f https://download.openmmlab.com/mmcv/dist/cu111/torch1.8.0/index.html
-
-    if %errorlevel% neq 0 (
-        echo.
-        echo *******************************************************
-        echo ERROR: Failed to install mmcv-full.
-        echo This could be due to SSL/corporate security issues.
-        echo Please check your firewall/proxy settings.
-        echo *******************************************************
-        echo.
-        goto eof
-    )
-)
-if %suffix%==cpu (
-    pip install "mmcv-full==1.7.2" --no-cache-dir -f https://download.openmmlab.com/mmcv/dist/%suffix%/torch1.8.0/index.html
-
-    if %errorlevel% neq 0 (
-        echo.
-        echo *******************************************************
-        echo ERROR: Failed to install mmcv-full.
-        echo This could be due to SSL/corporate security issues.
-        echo Please check your firewall/proxy settings.
-        echo *******************************************************
-        echo.
-        goto eof
-    )
-)
-if %suffix%==cu111system (
-    pip install "mmcv-full==1.7.2" --no-cache-dir
-)
-
-if %suffix%==cu111conda (
-    set "suffix=cu111system"
+if %errorlevel% neq 0 (
+    echo.
+    echo *******************************************************
+    echo ERROR: Failed to install mmcv.
+    echo This could be due to SSL/corporate security issues.
+    echo Please check your firewall/proxy settings.
+    echo *******************************************************
+    echo.
+    goto eof
 )
 
 pip install ..\gncnn\[%suffix%] --no-cache-dir
 echo Python packages installed.
 
+:: Check if models are already in their target paths
+echo Checking if models are already in their target paths...
+for /f "delims=" %%i in ('python -c "import gncnn; print(gncnn.__path__[0])"') do set gncnn_path=%%i
+
+:: Check if gncnn_path is empty
+if "%gncnn_path%"=="" (
+    echo.
+    echo *******************************************************
+    echo ERROR: gncnn is not installed or its path could not be determined.
+    echo Skipping model checking and related operations.
+    goto download_models
+)
+
+set detection_model_dir="%gncnn_path%\detection\logs\cascade_mask_rcnn_R_50_FPN_1x\external-validation\output\"
+set classification_model_dir="%gncnn_path%\classification\logs\"
+
+:: Verify if detection model exists
+if exist "%detection_model_dir%\model_final.pth" (
+    echo Detection model already exists in the target path.
+    set "detection_model_exists=true"
+) else (
+    set "detection_model_exists=false"
+)
+
+:: Verify if classification models exist
+if exist "%classification_model_dir%" (
+    echo Classification models already exist in the target path.
+    set "classification_model_exists=true"
+) else (
+    set "classification_model_exists=false"
+)
+
+:: Skip download and copy if all models exist
+if "%detection_model_exists%"=="true" if "%classification_model_exists%"=="true" (
+    echo All models are already in their target paths. Skipping download and copy process.
+    goto models_checked
+)
+
+:download_models
 :: Download the models
 echo Downloading the models...
 python .\download_models.py
@@ -178,21 +164,8 @@ if not exist ..\models\models\detection\model_final.pth (
 )
 echo Models downloaded.
 
-:: Get model target paths
+:: Copy the models to the target paths
 echo Copying the models to the target paths...
-for /f "delims=" %%i in ('python -c "import gncnn; print(gncnn.__path__[0])"') do set gncnn_path=%%i
-
-:: Check if gncnn_path is empty
-if "%gncnn_path%"=="" (
-    echo.
-    echo *******************************************************
-    echo ERROR: gncnn is not installed or its path could not be determined.
-    echo Skipping model copying and related operations.
-    goto eof
-)
-
-set detection_model_dir="%gncnn_path%\detection\logs\cascade_mask_rcnn_R_50_FPN_1x\external-validation\output\"
-set classification_model_dir="%gncnn_path%\classification\logs\"
 
 :: Copy the detection model to the target path
 if not exist %detection_model_dir% mkdir %detection_model_dir%
@@ -206,6 +179,8 @@ echo Classification models copied.
 
 :: Remove models directory
 rmdir /S /Q ..\models
+
+:models_checked
 
 :: Install the QuPath extension
 echo Installing QuPath extension
